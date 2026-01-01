@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Split PDF — pdfsajao</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Split PDF into separate pages or a page range. Fast, private, works in your browser — by pdfsajao." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://pdftool-lang.github.io/split-pdf/" />
+  <meta name="theme-color" content="#2563EB" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- pdf-lib -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <style>
+    :root{
+      --accent: #3B82F6;
+      --accent2:#2563EB;
+      --accentSoft: rgba(59,130,246,0.18);
+
+      --bg: #070A12;
+      --bg2:#0B1020;
+
+      --surface: rgba(255,255,255,0.07);
+      --surface2: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.14);
+
+      --text: #F5F7FF;
+      --muted: rgba(245,247,255,0.72);
+
+      --shadow: 0 18px 50px rgba(0,0,0,0.45);
+      --radius: 18px;
+
+      --container: 1100px;
+    }
+
+    [data-theme="light"]{
+      --bg: #F7F8FC;
+      --bg2:#FFFFFF;
+
+      --surface: rgba(10,14,30,0.05);
+      --surface2: rgba(10,14,30,0.07);
+      --border: rgba(10,14,30,0.12);
+
+      --text: #0B1220;
+      --muted: rgba(11,18,32,0.70);
+
+      --shadow: 0 18px 40px rgba(10,14,30,0.14);
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 14% 10%, var(--accentSoft), transparent 55%),
+        radial-gradient(900px 520px at 80% 25%, rgba(255,255,255,0.10), transparent 60%),
+        linear-gradient(135deg, var(--bg), var(--bg2));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a{ color: var(--accent); text-decoration: none; }
+    .container{ max-width: var(--container); margin:0 auto; padding: 0 18px; }
+
+    .header{
+      position: sticky; top:0; z-index:50;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    @media (min-width: 900px){
+      .header{
+        background: rgba(0,0,0,0.20);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      [data-theme="light"] .header{ background: rgba(255,255,255,0.75); }
+    }
+    [data-theme="light"] .header{ background: rgba(255,255,255,0.75); }
+
+    .header-row{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .logo-mark{
+      width: 34px; height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 25px rgba(59,130,246,0.25);
+      display:flex; align-items:center; justify-content:center;
+      flex: 0 0 auto;
+    }
+    .logo-mark i{ color:#fff; font-size: 16px; }
+    .logo-text{ font-size: 18px; font-weight: 900; line-height: 1.1; }
+    .tag{ margin-top: 2px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    .header-actions{ display:flex; align-items:center; gap: 10px; flex: 0 0 auto; }
+
+    .pill{
+      display:flex;
+      gap: 6px;
+      padding: 5px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .pill button{
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+      min-height: 34px;
+      opacity: .92;
+      transition: .18s ease;
+      line-height: 1;
+    }
+    .pill button:hover{ background: var(--surface2); opacity: 1; }
+    .pill button.active{ background: var(--accent); color:#fff; opacity:1; }
+
+    .icon-btn{
+      width: 38px;
+      height: 38px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: .18s ease;
+    }
+    .icon-btn:hover{ background: var(--surface2); transform: translateY(-1px); }
+
+    .hero{ padding: 28px 0 8px; text-align:center; }
+    .hero h1{ margin:0 0 8px; font-size: clamp(22px, 4.8vw, 36px); line-height: 1.12; }
+    .accent{ color: var(--accent); }
+    .hero p{ margin:0 auto; max-width: 860px; color: var(--muted); font-size: 14px; line-height: 1.75; }
+
+    .panel{
+      margin: 16px auto 0;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .row{ display:flex; flex-wrap:wrap; gap: 10px; align-items:center; justify-content:center; }
+
+    .file{
+      flex: 1 1 420px;
+      border:1px dashed rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 12px;
+      text-align:left;
+    }
+    [data-theme="light"] .file{ border-color: rgba(10,14,30,0.20); background: rgba(10,14,30,0.04); }
+    .file label{ display:block; font-weight:800; margin-bottom:8px; }
+
+    .controls{
+      flex: 1 1 260px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 12px;
+      text-align:left;
+    }
+    [data-theme="light"] .controls{ background: rgba(10,14,30,0.04); }
+
+    .field{ margin-top: 10px; }
+    .field label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .select, .input{
+      width:100%;
+      border:1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .btn{
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 800;
+      min-height: 44px;
+      transition: .18s ease;
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      justify-content:center;
+    }
+    .btn:hover{ background: var(--surface2); transform: translateY(-1px); }
+    .btn-primary{
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      border-color: rgba(59,130,246,0.55);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(59,130,246,0.22);
+    }
+    .btn:disabled{ opacity: .6; cursor: not-allowed; transform:none; }
+
+    .status{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      text-align:center;
+    }
+
+    footer{
+      margin-top: 26px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 18px 0;
+      text-align:center;
+    }
+    footer p{ margin:0; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="container header-row">
+      <a class="brand" href="../index.html" aria-label="pdfsajao home">
+        <span class="logo-mark" aria-hidden="true"><i class="fa fa-file-pdf-o"></i></span>
+        <span>
+          <div class="logo-text">pdfsajao</div>
+          <div class="tag" id="t-tag">Fast • Private • Free</div>
+        </span>
+      </a>
+
+      <div class="header-actions">
+        <div class="pill" aria-label="Language switcher">
+          <button id="lang-en" class="active" aria-label="English">EN</button>
+          <button id="lang-hi" aria-label="Hindi">हिंदी</button>
+          <button id="lang-bn" aria-label="Bangla">বাংলা</button>
+        </div>
+
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+          <i class="fa fa-moon-o" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1 id="t-title">Split <span class="accent">PDF</span></h1>
+      <p id="t-sub">Split a PDF into separate pages or a selected range. Files stay in your browser.</p>
+    </section>
+
+    <section class="panel">
+      <div class="row">
+        <div class="file">
+          <label id="t-upload">Upload PDF</label>
+          <input id="pdfFile" type="file" accept="application/pdf" />
+          <div style="margin-top:8px;color:var(--muted);font-size:12px" id="t-note">
+            Tip: For “All pages”, multiple downloads will start.
+          </div>
+        </div>
+
+        <div class="controls">
+          <div style="font-weight:800" id="t-options">Split options</div>
+
+          <div class="field">
+            <label id="t-mode">Mode</label>
+            <select class="select" id="mode">
+              <option value="all">All pages (separate PDFs)</option>
+              <option value="range">Page range (one PDF)</option>
+            </select>
+          </div>
+
+          <div class="field" id="rangeWrap" style="display:none">
+            <label id="t-range">Range (example: 2-5)</label>
+            <input class="input" id="range" placeholder="2-5" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="splitBtn"><i class="fa fa-scissors"></i> <span id="t-split">Split</span></button>
+        <button class="btn" id="clearBtn"><i class="fa fa-trash"></i> <span id="t-clear">Clear</span></button>
+      </div>
+
+      <div class="status" id="status">Ready.</div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p id="t-footer">© 2025 pdfsajao — Split PDF</p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const { PDFDocument } = PDFLib;
+
+      const $ = (id) => document.getElementById(id);
+
+      // Theme
+      const themeBtn = $("theme-toggle");
+      function setTheme(t){
+        document.documentElement.setAttribute("data-theme", t);
+        try{ localStorage.setItem("pdfsajao_theme", t); }catch(e){}
+        themeBtn.innerHTML = (t === "light")
+          ? '<i class="fa fa-moon-o" aria-hidden="true"></i>'
+          : '<i class="fa fa-sun-o" aria-hidden="true"></i>';
+      }
+      (function(){
+        let t = "dark";
+        try{ t = localStorage.getItem("pdfsajao_theme") || "dark"; }catch(e){}
+        setTheme(t);
+      })();
+      themeBtn.addEventListener("click", () => {
+        const cur = document.documentElement.getAttribute("data-theme") || "dark";
+        setTheme(cur === "dark" ? "light" : "dark");
+      });
+
+      // i18n
+      const langData = {
+        en:{
+          tag:"Fast • Private • Free",
+          title:'Split <span class="accent">PDF</span>',
+          sub:"Split a PDF into separate pages or a selected range. Files stay in your browser.",
+          upload:"Upload PDF",
+          note:"Tip: For “All pages”, multiple downloads will start.",
+          options:"Split options",
+          mode:"Mode",
+          range:"Range (example: 2-5)",
+          split:"Split",
+          clear:"Clear",
+          ready:"Ready.",
+          pick:"Please select a PDF file first.",
+          invalid:"Invalid range. Example: 2-5",
+          loading:"Loading PDF…",
+          splitting:"Splitting…",
+          doneAll:(n)=>`Done. Downloaded ${n} file(s).`,
+          doneRange:"Done. Download started."
+        },
+        hi:{
+          tag:"तेज़ • प्राइवेट • फ्री",
+          title:'PDF <span class="accent">Split</span>',
+          sub:"PDF को अलग-अलग pages में या range में split करें। फाइलें ब्राउज़र में रहती हैं।",
+          upload:"PDF अपलोड करें",
+          note:"Tip: “All pages” में कई downloads शुरू होंगे।",
+          options:"Split options",
+          mode:"Mode",
+          range:"Range (उदाहरण: 2-5)",
+          split:"Split",
+          clear:"Clear",
+          ready:"Ready.",
+          pick:"पहले PDF चुनें।",
+          invalid:"Range गलत है। उदाहरण: 2-5",
+          loading:"PDF load हो रहा है…",
+          splitting:"Splitting…",
+          doneAll:(n)=>`Done. ${n} file(s) डाउनलोड हुए।`,
+          doneRange:"Done. Download started."
+        },
+        bn:{
+          tag:"দ্রুত • প্রাইভেট • ফ্রি",
+          title:'PDF <span class="accent">Split</span>',
+          sub:"PDF আলাদা পেজে বা নির্দিষ্ট রেঞ্জে split করুন। ফাইল ব্রাউজারেই থাকে।",
+          upload:"PDF আপলোড করুন",
+          note:"Tip: “All pages” দিলে একাধিক download শুরু হবে।",
+          options:"Split options",
+          mode:"Mode",
+          range:"Range (উদাহরণ: 2-5)",
+          split:"Split",
+          clear:"Clear",
+          ready:"Ready.",
+          pick:"আগে একটি PDF সিলেক্ট করুন।",
+          invalid:"Range ভুল। উদাহরণ: 2-5",
+          loading:"PDF লোড হচ্ছে…",
+          splitting:"Splitting…",
+          doneAll:(n)=>`Done. মোট ${n}টা ফাইল ডাউনলোড হয়েছে।`,
+          doneRange:"Done. Download started."
+        }
+      };
+      let currentLang = "en";
+
+      const statusEl = $("status");
+      function setStatus(msg){ statusEl.textContent = msg; }
+
+      function setLanguage(lang){
+        currentLang = lang;
+        document.documentElement.setAttribute("lang", lang === "bn" ? "bn" : (lang === "hi" ? "hi" : "en"));
+        const t = langData[lang];
+
+        $("t-tag").innerText = t.tag;
+        $("t-title").innerHTML = t.title;
+        $("t-sub").innerText = t.sub;
+        $("t-upload").innerText = t.upload;
+        $("t-note").innerText = t.note;
+        $("t-options").innerText = t.options;
+        $("t-mode").innerText = t.mode;
+        $("t-range").innerText = t.range;
+        $("t-split").innerText = t.split;
+        $("t-clear").innerText = t.clear;
+        $("t-footer").innerText = "© 2025 pdfsajao — Split PDF";
+
+        document.querySelectorAll(".pill button").forEach(b => b.classList.remove("active"));
+        $("lang-" + lang).classList.add("active");
+
+        setStatus(t.ready);
+        try { localStorage.setItem("pdfsajao_lang", lang); } catch(e) {}
+      }
+
+      $("lang-en").onclick = () => setLanguage("en");
+      $("lang-hi").onclick = () => setLanguage("hi");
+      $("lang-bn").onclick = () => setLanguage("bn");
+
+      (function initLang(){
+        let saved = "en";
+        try { saved = localStorage.getItem("pdfsajao_lang") || "en"; } catch(e) {}
+        if(!langData[saved]) saved = "en";
+        setLanguage(saved);
+      })();
+
+      // UI controls
+      const modeSel = $("mode");
+      const rangeWrap = $("rangeWrap");
+      modeSel.addEventListener("change", () => {
+        rangeWrap.style.display = (modeSel.value === "range") ? "block" : "none";
+      });
+
+      const splitBtn = $("splitBtn");
+      const clearBtn = $("clearBtn");
+      const fileInput = $("pdfFile");
+
+      function setBusy(b){
+        splitBtn.disabled = b;
+        clearBtn.disabled = b;
+        fileInput.disabled = b;
+        modeSel.disabled = b;
+        $("range").disabled = b;
+      }
+
+      function downloadBytes(bytes, filename){
+        const blob = new Blob([bytes], { type:"application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }
+
+      function parseRange(str){
+        const s = (str || "").trim();
+        const m = s.match(/^(d+)s*-s*(d+)$/);
+        if(!m) return null;
+        const start = parseInt(m[1], 10);
+        const end = parseInt(m[2], 10);
+        if(!Number.isFinite(start) || !Number.isFinite(end) || start < 1 || end < 1 || end < start) return null;
+        return { start, end };
+      }
+
+      clearBtn.onclick = () => {
+        fileInput.value = "";
+        $("range").value = "";
+        modeSel.value = "all";
+        rangeWrap.style.display = "none";
+        setStatus(langData[currentLang].ready);
+      };
+
+      splitBtn.onclick = async () => {
+        const f = fileInput.files[0];
+        if(!f) return alert(langData[currentLang].pick);
+
+        setBusy(true);
+
+        try{
+          setStatus(langData[currentLang].loading);
+          const buf = await f.arrayBuffer();
+          const src = await PDFDocument.load(buf);
+          const pageCount = src.getPageCount();
+
+          setStatus(langData[currentLang].splitting);
+
+          if(modeSel.value === "all"){
+            let count = 0;
+            for(let i=0; i<pageCount; i++){
+              const out = await PDFDocument.create();
+              const [p] = await out.copyPages(src, [i]);
+              out.addPage(p);
+              const bytes = await out.save();
+              downloadBytes(bytes, `page-${i+1}.pdf`);
+              count++;
+            }
+            setStatus(langData[currentLang].doneAll(count));
+          }else{
+            const r = parseRange($("range").value);
+            if(!r) { alert(langData[currentLang].invalid); setStatus(langData[currentLang].ready); return; }
+            if(r.end > pageCount){ alert(langData[currentLang].invalid); setStatus(langData[currentLang].ready); return; }
+
+            const out = await PDFDocument.create();
+            const indices = [];
+            for(let p=r.start; p<=r.end; p++) indices.push(p-1);
+
+            const pages = await out.copyPages(src, indices); // copyPages is required [web:217]
+            pages.forEach(pg => out.addPage(pg));
+
+            const bytes = await out.save();
+            downloadBytes(bytes, `pages-${r.start}-to-${r.end}.pdf`);
+            setStatus(langData[currentLang].doneRange);
+          }
+        }catch(err){
+          console.error(err);
+          setStatus("Error: " + (err && err.message ? err.message : "Unknown error"));
+        }finally{
+          setBusy(false);
+        }
+      };
+
+      setStatus(langData[currentLang].ready);
+    });
+  </script>
+</body>
+</html>
