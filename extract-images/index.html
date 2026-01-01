@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <!-- pdf.js (CDN) -->
+  <!-- pdf.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.js"></script>
 
   <style>
@@ -72,28 +72,76 @@
       position: sticky; top:0; z-index:50;
       border-bottom: 1px solid var(--border);
       background: rgba(0,0,0,0.35);
-      backdrop-filter: none; -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
     @media (min-width: 900px){
-      .header{ background: rgba(0,0,0,0.20); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+      .header{
+        background: rgba(0,0,0,0.20);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
       [data-theme="light"] .header{ background: rgba(255,255,255,0.75); }
     }
     [data-theme="light"] .header{ background: rgba(255,255,255,0.75); }
 
-    .header-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding: 12px 0; }
-    .brand{ display:flex; align-items: baseline; gap: 10px; min-width:0; }
-    .logo-text{ font-size: 22px; font-weight: 800; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
-    .dot{ width: 10px; height:10px; border-radius:999px; background: var(--accent); box-shadow: 0 0 0 6px rgba(59,130,246,0.14); transform: translateY(-2px); }
-    .tag{ font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--surface); padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
+    .header-row{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+    }
 
-    .header-actions{ display:flex; align-items:center; gap:10px; }
+    /* brand */
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .logo-mark{
+      width: 34px; height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 25px rgba(59,130,246,0.25);
+      display:flex; align-items:center; justify-content:center;
+      flex: 0 0 auto;
+    }
+    .logo-mark i{ color:#fff; font-size: 16px; }
+    .brand-text{ min-width:0; }
+    .logo-text{
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.1;
+    }
+    .tag{
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 42vw;
+    }
 
-    /* Language pill (same as homepage) */
+    .header-actions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    /* Smaller language pill */
     .pill{
       display:flex;
       gap: 6px;
-      padding: 6px;
-      border-radius: 14px;
+      padding: 5px;
+      border-radius: 12px;
       background: var(--surface);
       border: 1px solid var(--border);
     }
@@ -101,11 +149,11 @@
       background: transparent;
       border: 0;
       color: var(--text);
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
       cursor: pointer;
-      min-height: 40px;
+      min-height: 34px;
       opacity: .92;
       transition: .18s ease;
       line-height: 1;
@@ -113,23 +161,26 @@
     .pill button:hover{ background: var(--surface2); opacity: 1; }
     .pill button.active{ background: var(--accent); color:#fff; opacity:1; }
     .pill button.active:hover{ background: var(--accent2); }
-    .pill button:focus-visible{
-      outline: 2px solid rgba(59,130,246,0.55);
-      outline-offset: 2px;
-    }
 
     .icon-btn{
-      width:44px; height:44px; border-radius:14px;
-      border:1px solid var(--border); background: var(--surface);
-      color: var(--text); cursor:pointer; transition: .18s ease;
-      display:inline-flex; align-items:center; justify-content:center;
+      width: 38px;
+      height: 38px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: .18s ease;
     }
     .icon-btn:hover{ background: var(--surface2); transform: translateY(-1px); }
 
     .hero{ padding: 28px 0 8px; text-align:center; }
-    .hero h1{ margin:0 0 8px; font-size: clamp(24px, 4.8vw, 38px); line-height: 1.12; }
+    .hero h1{ margin:0 0 8px; font-size: clamp(22px, 4.8vw, 36px); line-height: 1.12; }
     .accent{ color: var(--accent); }
-    .hero p{ margin:0 auto; max-width: 860px; color: var(--muted); font-size: 15px; line-height: 1.75; }
+    .hero p{ margin:0 auto; max-width: 860px; color: var(--muted); font-size: 14px; line-height: 1.75; }
 
     .panel{
       margin: 16px auto 0;
@@ -149,8 +200,7 @@
       text-align:left;
     }
     [data-theme="light"] .file{ border-color: rgba(10,14,30,0.20); background: rgba(10,14,30,0.04); }
-    .file label{ display:block; font-weight:700; margin-bottom:8px; }
-    .file input{ width:100%; }
+    .file label{ display:block; font-weight:800; margin-bottom:8px; }
 
     .btn{
       border: 1px solid var(--border);
@@ -159,7 +209,7 @@
       padding: 12px 14px;
       border-radius: 14px;
       cursor:pointer;
-      font-weight: 700;
+      font-weight: 800;
       min-height: 44px;
       transition: .18s ease;
       display:inline-flex;
@@ -174,6 +224,7 @@
       color: #fff;
       box-shadow: 0 10px 30px rgba(59,130,246,0.22);
     }
+    .btn:disabled{ opacity: .6; cursor: not-allowed; transform:none; }
 
     .status{
       margin-top: 10px;
@@ -229,17 +280,23 @@
       text-align:center;
     }
     footer p{ margin:0; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 520px){
+      .tag{ max-width: 54vw; }
+    }
   </style>
 </head>
 
 <body>
   <header class="header">
     <div class="container header-row">
-      <div class="brand">
-        <a class="logo-text" href="../index.html">pdfsajao</a>
-        <span class="dot" aria-hidden="true"></span>
-        <span class="tag" id="t-tag">Fast • Private • Free</span>
-      </div>
+      <a class="brand" href="../index.html" aria-label="pdfsajao home">
+        <span class="logo-mark" aria-hidden="true"><i class="fa fa-file-pdf-o"></i></span>
+        <span class="brand-text">
+          <div class="logo-text">pdfsajao</div>
+          <div class="tag" id="t-tag">Fast • Private • Free</div>
+        </span>
+      </a>
 
       <div class="header-actions">
         <div class="pill" aria-label="Language switcher">
@@ -284,6 +341,11 @@
   </footer>
 
   <script>
+    // ===== pdf.js worker (IMPORTANT) =====
+    // workerSrc সেট না করলে slow/fake worker সমস্যা হতে পারে [web:161][web:156]
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.js";
+
     // ===== Theme toggle =====
     const themeBtn = document.getElementById("theme-toggle");
     function setTheme(t){
@@ -319,7 +381,8 @@
         doneX: (n) => `Done. Found ${n} embedded image(s).`,
         cleared: 'Cleared. Select a new PDF and extract again.',
         dl: 'Download',
-        footer: '© 2025 pdfsajao — Extract Images'
+        footer: '© 2025 pdfsajao — Extract Images',
+        pick: 'Select a PDF first.'
       },
       hi: {
         tag: "तेज़ • प्राइवेट • फ्री",
@@ -335,7 +398,8 @@
         doneX: (n) => `Done. ${n} embedded image(s) मिले।`,
         cleared: 'Cleared. नई PDF चुनें और फिर से Extract करें।',
         dl: 'Download',
-        footer: '© 2025 pdfsajao — Extract Images'
+        footer: '© 2025 pdfsajao — Extract Images',
+        pick: 'पहले PDF चुनें।'
       },
       bn: {
         tag: "দ্রুত • প্রাইভেট • ফ্রি",
@@ -351,7 +415,8 @@
         doneX: (n) => `Done. মোট ${n}টা embedded image পাওয়া গেছে।`,
         cleared: 'Cleared. নতুন PDF সিলেক্ট করে আবার Extract করো।',
         dl: 'Download',
-        footer: '© 2025 pdfsajao — Extract Images'
+        footer: '© 2025 pdfsajao — Extract Images',
+        pick: 'আগে PDF সিলেক্ট করো।'
       }
     };
 
@@ -369,16 +434,13 @@
       document.getElementById("t-clear").innerText = t.clear;
       document.getElementById("t-footer").innerText = t.footer;
 
-      // Only set tip if not actively processing
       const st = document.getElementById("status").getAttribute("data-state") || "idle";
-      if(st === "idle"){
-        document.getElementById("status").textContent = t.tip;
-      }
+      if(st === "idle") document.getElementById("status").textContent = t.tip;
 
       document.querySelectorAll(".pill button").forEach(b => b.classList.remove("active"));
       document.getElementById("lang-" + lang).classList.add("active");
 
-      try { localStorage.setItem("pdfsajao_lang", lang); } catch(e) {} // [web:114]
+      try { localStorage.setItem("pdfsajao_lang", lang); } catch(e) {}
     }
 
     document.getElementById("lang-en").onclick = () => setLanguage("en");
@@ -387,14 +449,16 @@
 
     (function initLang(){
       let saved = "en";
-      try { saved = localStorage.getItem("pdfsajao_lang") || "en"; } catch(e) {} // [web:115]
+      try { saved = localStorage.getItem("pdfsajao_lang") || "en"; } catch(e) {}
       if(!langData[saved]) saved = "en";
       setLanguage(saved);
     })();
 
-    // ===== Extract embedded images (best-effort) =====
+    // ===== Extract embedded images (best-effort, improved) =====
     const grid = document.getElementById("grid");
     const statusEl = document.getElementById("status");
+    const extractBtn = document.getElementById("extractBtn");
+    const clearBtn = document.getElementById("clearBtn");
 
     function setStatus(msg, state="busy"){
       statusEl.textContent = msg;
@@ -446,61 +510,83 @@
       });
     }
 
-    document.getElementById("clearBtn").onclick = () => {
+    // IMPORTANT: use callback form to wait until object is resolved [web:15]
+    function getObjAsync(page, name){
+      return new Promise((resolve) => {
+        try{
+          page.objs.get(name, (data) => resolve(data));
+        }catch(e){
+          resolve(null);
+        }
+      });
+    }
+
+    function setBusy(busy){
+      extractBtn.disabled = busy;
+      clearBtn.disabled = busy;
+    }
+
+    clearBtn.onclick = () => {
       grid.innerHTML = "";
       setStatus(langData[currentLang].cleared, "idle");
     };
 
-    document.getElementById("extractBtn").onclick = async () => {
+    extractBtn.onclick = async () => {
       const f = document.getElementById("pdfFile").files[0];
-      if(!f) return alert("Select a PDF");
+      if(!f) return alert(langData[currentLang].pick);
 
       grid.innerHTML = "";
-      setStatus(langData[currentLang].loading, "busy");
+      setBusy(true);
 
-      const bytes = await readAsArrayBuffer(f);
-      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+      try{
+        setStatus(langData[currentLang].loading, "busy");
+        const bytes = await readAsArrayBuffer(f);
 
-      const OPS = pdfjsLib.OPS; // operator constants [web:15][web:6]
-      let totalFound = 0;
+        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const OPS = pdfjsLib.OPS;
 
-      for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
-        setStatus(langData[currentLang].scanning(pageNum, pdf.numPages), "busy");
+        let totalFound = 0;
 
-        const page = await pdf.getPage(pageNum);
-        const opList = await page.getOperatorList();
+        for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
+          setStatus(langData[currentLang].scanning(pageNum, pdf.numPages), "busy");
 
-        for(let i=0; i<opList.fnArray.length; i++){
-          const fn = opList.fnArray[i];
-          const args = opList.argsArray[i];
+          const page = await pdf.getPage(pageNum);
+          const opList = await page.getOperatorList();
 
-          const isImg =
-            fn === OPS.paintImageXObject ||
-            fn === OPS.paintInlineImageXObject ||
-            fn === OPS.paintJpegXObject;
+          for(let i=0; i<opList.fnArray.length; i++){
+            const fn = opList.fnArray[i];
+            const args = opList.argsArray[i];
 
-          if(!isImg) continue;
+            const isImg =
+              fn === OPS.paintImageXObject ||
+              fn === OPS.paintInlineImageXObject ||
+              fn === OPS.paintJpegXObject;
 
-          const name = args && args[0];
-          if(!name) continue;
+            if(!isImg) continue;
 
-          let obj = null;
-          try { obj = page.objs.get(name); } catch(e) { obj = null; }
-          if(!obj) continue;
+            const name = args && args[0];
+            if(!name) continue;
 
-          // Expect something like {width,height,data:Uint8ClampedArray} in some cases [web:15]
-          if(obj.width && obj.height && obj.data){
-            const dataUrl = imageDataToPngDataUrl(obj);
-            totalFound++;
-            addCard({ dataUrl, pageNum, index: totalFound, w: obj.width, h: obj.height });
+            const obj = await getObjAsync(page, name);
+            if(!obj) continue;
+
+            if(obj.width && obj.height && obj.data){
+              const dataUrl = imageDataToPngDataUrl(obj);
+              totalFound++;
+              addCard({ dataUrl, pageNum, index: totalFound, w: obj.width, h: obj.height });
+            }
           }
         }
-      }
 
-      setStatus(totalFound ? langData[currentLang].doneX(totalFound) : langData[currentLang].done0, "idle");
+        setStatus(totalFound ? langData[currentLang].doneX(totalFound) : langData[currentLang].done0, "idle");
+      }catch(err){
+        console.error(err);
+        setStatus("Error: " + (err && err.message ? err.message : "Unknown error"), "idle");
+      }finally{
+        setBusy(false);
+      }
     };
 
-    // Initial idle status
     setStatus(langData[currentLang].tip, "idle");
   </script>
 </body>
