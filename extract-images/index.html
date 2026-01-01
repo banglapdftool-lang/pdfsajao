@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Extract Images – pdfsajao</title>
 
-  <meta name="description" content="Extract embedded images from PDF — fast, private, works in your browser." />
+  <meta name="description" content="pdfsajao: Extract embedded images from PDF — fast, private, and works in your browser." />
   <meta name="robots" content="index,follow" />
   <meta name="theme-color" content="#2563EB" />
 
@@ -32,9 +32,6 @@
 
       --text: #F5F7FF;
       --muted: rgba(245,247,255,0.72);
-
-      --success: #22C55E;
-      --warning: #FBBF24;
 
       --shadow: 0 18px 50px rgba(0,0,0,0.45);
       --radius: 18px;
@@ -90,10 +87,42 @@
     .tag{ font-size: 12px; color: var(--muted); border: 1px solid var(--border); background: var(--surface); padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
 
     .header-actions{ display:flex; align-items:center; gap:10px; }
+
+    /* Language pill (same as homepage) */
+    .pill{
+      display:flex;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .pill button{
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      min-height: 40px;
+      opacity: .92;
+      transition: .18s ease;
+      line-height: 1;
+    }
+    .pill button:hover{ background: var(--surface2); opacity: 1; }
+    .pill button.active{ background: var(--accent); color:#fff; opacity:1; }
+    .pill button.active:hover{ background: var(--accent2); }
+    .pill button:focus-visible{
+      outline: 2px solid rgba(59,130,246,0.55);
+      outline-offset: 2px;
+    }
+
     .icon-btn{
       width:44px; height:44px; border-radius:14px;
       border:1px solid var(--border); background: var(--surface);
       color: var(--text); cursor:pointer; transition: .18s ease;
+      display:inline-flex; align-items:center; justify-content:center;
     }
     .icon-btn:hover{ background: var(--surface2); transform: translateY(-1px); }
 
@@ -209,10 +238,16 @@
       <div class="brand">
         <a class="logo-text" href="../index.html">pdfsajao</a>
         <span class="dot" aria-hidden="true"></span>
-        <span class="tag">Fast • Private • Free</span>
+        <span class="tag" id="t-tag">Fast • Private • Free</span>
       </div>
 
       <div class="header-actions">
+        <div class="pill" aria-label="Language switcher">
+          <button id="lang-en" class="active" aria-label="English">EN</button>
+          <button id="lang-hi" aria-label="Hindi">हिंदी</button>
+          <button id="lang-bn" aria-label="Bangla">বাংলা</button>
+        </div>
+
         <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
           <i class="fa fa-moon-o" aria-hidden="true"></i>
         </button>
@@ -222,35 +257,34 @@
 
   <main class="container">
     <section class="hero">
-      <h1>Extract <span class="accent">Embedded Images</span> from PDF</h1>
-      <p>এই টুলটা PDF-এর ভিতরে থাকা আলাদা ছবিগুলো (যেমন লোগো/ফটো) বের করার চেষ্টা করে। সব PDF-এ একইভাবে কাজ নাও করতে পারে, কিন্তু বেশিরভাগ সাধারণ PDF-এ কাজ করবে।</p>
+      <h1 id="t-title">Extract <span class="accent">Embedded Images</span> from PDF</h1>
+      <p id="t-sub">This tool tries to extract images embedded inside your PDF (logos/photos). Results may vary depending on how the PDF was created.</p>
     </section>
 
     <section class="panel">
       <div class="row">
         <div class="file">
-          <label>Upload PDF</label>
+          <label id="t-upload">Upload PDF</label>
           <input id="pdfFile" type="file" accept="application/pdf" />
         </div>
 
-        <button class="btn btn-primary" id="extractBtn"><i class="fa fa-magic"></i> Extract images</button>
-        <button class="btn" id="clearBtn"><i class="fa fa-trash"></i> Clear</button>
+        <button class="btn btn-primary" id="extractBtn"><i class="fa fa-magic"></i> <span id="t-extract">Extract images</span></button>
+        <button class="btn" id="clearBtn"><i class="fa fa-trash"></i> <span id="t-clear">Clear</span></button>
       </div>
 
-      <div class="status" id="status">Tip: বড় PDF হলে একটু সময় লাগতে পারে।</div>
-
+      <div class="status" id="status">Tip: Large PDFs may take some time.</div>
       <div class="grid" id="grid"></div>
     </section>
   </main>
 
   <footer>
     <div class="container">
-      <p>© 2025 pdfsajao — Extract Images</p>
+      <p id="t-footer">© 2025 pdfsajao — Extract Images</p>
     </div>
   </footer>
 
   <script>
-    // Theme toggle (same style as your homepage)
+    // ===== Theme toggle =====
     const themeBtn = document.getElementById("theme-toggle");
     function setTheme(t){
       document.documentElement.setAttribute("data-theme", t);
@@ -269,12 +303,103 @@
       setTheme(cur === "dark" ? "light" : "dark");
     });
 
-    // ====== Extract embedded images (best-effort) ======
-    const OPS = () => pdfjsLib.OPS; // pdf.js operator constants [page:3]
+    // ===== i18n =====
+    const langData = {
+      en: {
+        tag: "Fast • Private • Free",
+        title: 'Extract <span class="accent">Embedded Images</span> from PDF',
+        sub: 'This tool tries to extract images embedded inside your PDF (logos/photos). Results may vary depending on how the PDF was created.',
+        upload: 'Upload PDF',
+        extract: 'Extract images',
+        clear: 'Clear',
+        tip: 'Tip: Large PDFs may take some time.',
+        loading: 'Loading PDF...',
+        scanning: (p, total) => `Scanning page ${p}/${total}...`,
+        done0: 'No embedded images found. (Some PDFs store images differently or are scanned PDFs.)',
+        doneX: (n) => `Done. Found ${n} embedded image(s).`,
+        cleared: 'Cleared. Select a new PDF and extract again.',
+        dl: 'Download',
+        footer: '© 2025 pdfsajao — Extract Images'
+      },
+      hi: {
+        tag: "तेज़ • प्राइवेट • फ्री",
+        title: 'PDF से <span class="accent">Embedded Images</span> निकालें',
+        sub: 'यह टूल PDF के अंदर embedded images (logo/photo) निकालने की कोशिश करता है। PDF के प्रकार के अनुसार परिणाम बदल सकते हैं।',
+        upload: 'PDF अपलोड करें',
+        extract: 'Images निकालें',
+        clear: 'Clear',
+        tip: 'Tip: बड़ी PDF में थोड़ा समय लग सकता है।',
+        loading: 'PDF load हो रहा है...',
+        scanning: (p, total) => `Page ${p}/${total} scan हो रहा है...`,
+        done0: 'कोई embedded image नहीं मिला। (कुछ PDFs में images अलग तरीके से होती हैं या PDF scanned हो सकती है।)',
+        doneX: (n) => `Done. ${n} embedded image(s) मिले।`,
+        cleared: 'Cleared. नई PDF चुनें और फिर से Extract करें।',
+        dl: 'Download',
+        footer: '© 2025 pdfsajao — Extract Images'
+      },
+      bn: {
+        tag: "দ্রুত • প্রাইভেট • ফ্রি",
+        title: 'PDF থেকে <span class="accent">Embedded Images</span> বের করুন',
+        sub: 'এই টুলটা PDF-এর ভেতরে থাকা embedded images (লোগো/ফটো) বের করার চেষ্টা করে। PDF কীভাবে তৈরি হয়েছে তার ওপর ফলাফল নির্ভর করে।',
+        upload: 'PDF আপলোড করুন',
+        extract: 'ছবি বের করুন',
+        clear: 'Clear',
+        tip: 'Tip: বড় PDF হলে একটু সময় লাগতে পারে।',
+        loading: 'PDF লোড হচ্ছে...',
+        scanning: (p, total) => `পৃষ্ঠা স্ক্যান হচ্ছে ${p}/${total}...`,
+        done0: 'কোনো embedded image পাওয়া যায়নি। (কিছু PDF-এ ছবি অন্যভাবে থাকে/স্ক্যান PDF হতে পারে।)',
+        doneX: (n) => `Done. মোট ${n}টা embedded image পাওয়া গেছে।`,
+        cleared: 'Cleared. নতুন PDF সিলেক্ট করে আবার Extract করো।',
+        dl: 'Download',
+        footer: '© 2025 pdfsajao — Extract Images'
+      }
+    };
+
+    let currentLang = "en";
+    function setLanguage(lang){
+      currentLang = lang;
+      document.documentElement.setAttribute("lang", lang === "bn" ? "bn" : (lang === "hi" ? "hi" : "en"));
+
+      const t = langData[lang];
+      document.getElementById("t-tag").innerText = t.tag;
+      document.getElementById("t-title").innerHTML = t.title;
+      document.getElementById("t-sub").innerText = t.sub;
+      document.getElementById("t-upload").innerText = t.upload;
+      document.getElementById("t-extract").innerText = t.extract;
+      document.getElementById("t-clear").innerText = t.clear;
+      document.getElementById("t-footer").innerText = t.footer;
+
+      // Only set tip if not actively processing
+      const st = document.getElementById("status").getAttribute("data-state") || "idle";
+      if(st === "idle"){
+        document.getElementById("status").textContent = t.tip;
+      }
+
+      document.querySelectorAll(".pill button").forEach(b => b.classList.remove("active"));
+      document.getElementById("lang-" + lang).classList.add("active");
+
+      try { localStorage.setItem("pdfsajao_lang", lang); } catch(e) {} // [web:114]
+    }
+
+    document.getElementById("lang-en").onclick = () => setLanguage("en");
+    document.getElementById("lang-hi").onclick = () => setLanguage("hi");
+    document.getElementById("lang-bn").onclick = () => setLanguage("bn");
+
+    (function initLang(){
+      let saved = "en";
+      try { saved = localStorage.getItem("pdfsajao_lang") || "en"; } catch(e) {} // [web:115]
+      if(!langData[saved]) saved = "en";
+      setLanguage(saved);
+    })();
+
+    // ===== Extract embedded images (best-effort) =====
     const grid = document.getElementById("grid");
     const statusEl = document.getElementById("status");
 
-    function setStatus(msg){ statusEl.textContent = msg; }
+    function setStatus(msg, state="busy"){
+      statusEl.textContent = msg;
+      statusEl.setAttribute("data-state", state);
+    }
 
     function downloadDataUrl(dataUrl, filename){
       const a = document.createElement("a");
@@ -302,7 +427,7 @@
         <div class="meta">
           <span>Page ${pageNum} • ${w}×${h}</span>
           <button class="btn" style="padding:10px 12px; min-height:40px" data-dl="1">
-            <i class="fa fa-download"></i> Download
+            <i class="fa fa-download"></i> ${langData[currentLang].dl}
           </button>
         </div>
       `;
@@ -323,53 +448,48 @@
 
     document.getElementById("clearBtn").onclick = () => {
       grid.innerHTML = "";
-      setStatus("Cleared. নতুন PDF সিলেক্ট করে আবার Extract করো।");
+      setStatus(langData[currentLang].cleared, "idle");
     };
 
     document.getElementById("extractBtn").onclick = async () => {
       const f = document.getElementById("pdfFile").files[0];
-      if(!f) return alert("PDF সিলেক্ট করো");
+      if(!f) return alert("Select a PDF");
 
       grid.innerHTML = "";
-      setStatus("Loading PDF...");
+      setStatus(langData[currentLang].loading, "busy");
 
       const bytes = await readAsArrayBuffer(f);
-      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise; // [page:4]
+      const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
 
+      const OPS = pdfjsLib.OPS; // operator constants [web:15][web:6]
       let totalFound = 0;
 
       for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
-        setStatus(`Scanning page ${pageNum}/${pdf.numPages}...`);
+        setStatus(langData[currentLang].scanning(pageNum, pdf.numPages), "busy");
 
         const page = await pdf.getPage(pageNum);
-        const operatorList = await page.getOperatorList(); // [page:3]
+        const opList = await page.getOperatorList();
 
-        for(let i=0; i<operatorList.fnArray.length; i++){
-          const fn = operatorList.fnArray[i];
-          const args = operatorList.argsArray[i];
+        for(let i=0; i<opList.fnArray.length; i++){
+          const fn = opList.fnArray[i];
+          const args = opList.argsArray[i];
 
-          // We look for image paint operators (best-effort) [page:3]
           const isImg =
-            fn === OPS().paintImageXObject ||
-            fn === OPS().paintInlineImageXObject ||
-            fn === OPS().paintJpegXObject;
+            fn === OPS.paintImageXObject ||
+            fn === OPS.paintInlineImageXObject ||
+            fn === OPS.paintJpegXObject;
 
           if(!isImg) continue;
 
           const name = args && args[0];
           if(!name) continue;
 
-          // page.objs is an internal cache; sometimes the object is already resolved
-          let obj;
-          try {
-            obj = page.objs.get(name);
-          } catch (e) {
-            obj = null;
-          }
+          let obj = null;
+          try { obj = page.objs.get(name); } catch(e) { obj = null; }
           if(!obj) continue;
 
-          // obj can be ImageData-like for some operators
-          if(obj && obj.width && obj.height && obj.data){
+          // Expect something like {width,height,data:Uint8ClampedArray} in some cases [web:15]
+          if(obj.width && obj.height && obj.data){
             const dataUrl = imageDataToPngDataUrl(obj);
             totalFound++;
             addCard({ dataUrl, pageNum, index: totalFound, w: obj.width, h: obj.height });
@@ -377,10 +497,11 @@
         }
       }
 
-      setStatus(totalFound
-        ? `Done. মোট ${totalFound} টা embedded image পাওয়া গেছে।`
-        : "কোনো embedded image পাওয়া যায়নি। (অনেক PDF-এ ছবি একভাবে embed থাকে না/স্ক্যান PDF হতে পারে)");
+      setStatus(totalFound ? langData[currentLang].doneX(totalFound) : langData[currentLang].done0, "idle");
     };
+
+    // Initial idle status
+    setStatus(langData[currentLang].tip, "idle");
   </script>
 </body>
 </html>
