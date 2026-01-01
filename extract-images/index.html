@@ -3,19 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Extract Images – pdfsajao</title>
+  <title>Extract Images from PDF (Embedded) — pdfsajao</title>
 
-  <meta name="description" content="pdfsajao: Extract embedded images from PDF — fast, private, and works in your browser." />
-  <meta name="robots" content="index,follow" />
+  <!-- Basic SEO -->
+  <meta name="description" content="Extract embedded images from PDF online. Fast, private, mobile-friendly, and works in your browser — by pdfsajao." />
+  <meta name="robots" content="index,follow" /> <!-- [web:170] -->
+  <link rel="canonical" href="https://pdftool-lang.github.io/extract-images/" /> <!-- replace if your domain changes [web:178] -->
+
+  <!-- Social preview -->
+  <meta property="og:title" content="Extract Images from PDF — pdfsajao" />
+  <meta property="og:description" content="Extract embedded images (logos/photos) from PDF. Works in your browser." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pdftool-lang.github.io/extract-images/" />
+  <meta name="twitter:card" content="summary" />
+
   <meta name="theme-color" content="#2563EB" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <!-- pdf.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.js"></script>
+  <!-- PDF.js from jsDelivr (same version for worker) [web:145][web:157] -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.js"></script>
 
   <style>
     :root{
@@ -93,7 +103,6 @@
       padding: 12px 0;
     }
 
-    /* brand */
     .brand{
       display:flex;
       align-items:center;
@@ -234,7 +243,7 @@
       text-align:center;
     }
 
-    .grid{
+        .grid{
       margin-top: 14px;
       display:grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -280,10 +289,6 @@
       text-align:center;
     }
     footer p{ margin:0; color: var(--muted); font-size: 13px; }
-
-    @media (max-width: 520px){
-      .tag{ max-width: 54vw; }
-    }
   </style>
 </head>
 
@@ -341,10 +346,9 @@
   </footer>
 
   <script>
-    // ===== pdf.js worker (IMPORTANT) =====
-    // workerSrc সেট না করলে slow/fake worker সমস্যা হতে পারে [web:161][web:156]
+    // IMPORTANT: Set workerSrc before getDocument [web:145][web:157]
     pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.js";
+      "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.js";
 
     // ===== Theme toggle =====
     const themeBtn = document.getElementById("theme-toggle");
@@ -420,7 +424,7 @@
       }
     };
 
-    let currentLang = "en";
+        let currentLang = "en";
     function setLanguage(lang){
       currentLang = lang;
       document.documentElement.setAttribute("lang", lang === "bn" ? "bn" : (lang === "hi" ? "hi" : "en"));
@@ -454,7 +458,7 @@
       setLanguage(saved);
     })();
 
-    // ===== Extract embedded images (best-effort, improved) =====
+    // ===== Extract embedded images (best-effort) =====
     const grid = document.getElementById("grid");
     const statusEl = document.getElementById("status");
     const extractBtn = document.getElementById("extractBtn");
@@ -510,7 +514,7 @@
       });
     }
 
-    // IMPORTANT: use callback form to wait until object is resolved [web:15]
+    // Callback form helps when objects are not resolved immediately
     function getObjAsync(page, name){
       return new Promise((resolve) => {
         try{
