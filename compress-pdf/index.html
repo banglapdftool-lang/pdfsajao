@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compress PDF — pdfsajao</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Compress PDF in your browser (privacy friendly). Preview quality, choose compression level, and download compressed PDF — by pdfsajao." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://pdftool-lang.github.io/compress-pdf/" />
+  <meta name="theme-color" content="#2563EB" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- pdf.js + worker -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.js"></script>
+  <!-- pdf-lib -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  <style>
+    :root{
+      --accent:#3B82F6; --accent2:#2563EB; --accentSoft:rgba(59,130,246,.18);
+      --bg:#070A12; --bg2:#0B1020;
+      --surface:rgba(255,255,255,.07); --surface2:rgba(255,255,255,.10); --border:rgba(255,255,255,.14);
+      --text:#F5F7FF; --muted:rgba(245,247,255,.72);
+      --radius:18px; --container:1100px;
+    }
+    [data-theme="light"]{
+      --bg:#F7F8FC; --bg2:#fff;
+      --surface:rgba(10,14,30,.05); --surface2:rgba(10,14,30,.07); --border:rgba(10,14,30,.12);
+      --text:#0B1220; --muted:rgba(11,18,32,.70);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 14% 10%, var(--accentSoft), transparent 55%),
+        radial-gradient(900px 520px at 80% 25%, rgba(255,255,255,0.10), transparent 60%),
+        linear-gradient(135deg, var(--bg), var(--bg2));
+      min-height:100vh; overflow-x:hidden;
+    }
+    a{color:var(--accent); text-decoration:none}
+    .container{max-width:var(--container); margin:0 auto; padding:0 18px}
+
+    .header{
+      position:sticky; top:0; z-index:50;
+      border-bottom:1px solid var(--border);
+      background: rgba(0,0,0,0.35);
+      backdrop-filter:none; -webkit-backdrop-filter:none;
+    }
+    @media (min-width: 900px){
+      .header{ background: rgba(0,0,0,0.20); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+      [data-theme="light"] .header{ background: rgba(255,255,255,0.75); }
+    }
+    [data-theme="light"] .header{ background: rgba(255,255,255,0.75); }
+
+    .header-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0}
+    .brand{display:flex; align-items:center; gap:10px; min-width:0}
+    .logo-mark{
+      width:34px; height:34px; border-radius:12px;
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 10px 25px rgba(59,130,246,0.25);
+      flex:0 0 auto;
+    }
+    .logo-mark i{color:#fff; font-size:16px}
+    .logo-text{font-size:18px; font-weight:900; line-height:1.1}
+    .tag{margin-top:2px; font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw}
+
+    .header-actions{display:flex; align-items:center; gap:10px}
+    .pill{display:flex; gap:6px; padding:5px; border-radius:12px; background:var(--surface); border:1px solid var(--border)}
+    .pill button{background:transparent; border:0; color:var(--text); padding:8px 10px; border-radius:10px; font-size:12px; cursor:pointer; min-height:34px; opacity:.92}
+    .pill button.active{background:var(--accent); color:#fff; opacity:1}
+    .icon-btn{width:38px; height:38px; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer}
+
+    .hero{padding:28px 0 8px; text-align:center}
+    .hero h1{margin:0 0 8px; font-size:clamp(22px,4.8vw,36px); line-height:1.12}
+    .accent{color:var(--accent)}
+    .hero p{margin:0 auto; max-width:860px; color:var(--muted); font-size:14px; line-height:1.75}
+
+    .panel{
+      margin:16px auto 0;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg,var(--surface2),var(--surface));
+      border-radius:var(--radius);
+      padding:16px;
+    }
+    .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center}
+
+    .file{
+      flex:1 1 420px;
+      border:1px dashed rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.04);
+      border-radius:16px;
+      padding:12px;
+      text-align:left;
+    }
+    [data-theme="light"] .file{border-color: rgba(10,14,30,0.20); background: rgba(10,14,30,0.04)}
+    .file label{display:block; font-weight:800; margin-bottom:8px}
+
+    .controls{
+      flex: 1 1 300px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 12px;
+      text-align:left;
+    }
+    [data-theme="light"] .controls{background: rgba(10,14,30,0.04)}
+    .field{margin-top:10px}
+    .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
+    .select, .input{
+      width:100%;
+      border:1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      outline:none;
+    }
+
+        .btn{
+      border:1px solid var(--border);
+      background:var(--surface);
+      color:var(--text);
+      padding:12px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      justify-content:center;
+      transition:.18s ease;
+    }
+    .btn:hover{background:var(--surface2)}
+    .btn-primary{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      border-color: rgba(59,130,246,0.55);
+      color:#fff;
+      box-shadow:0 10px 30px rgba(59,130,246,0.22);
+    }
+    .btn-danger{
+      background: linear-gradient(180deg, #ef4444, #b91c1c);
+      border-color: rgba(239,68,68,0.55);
+      color:#fff;
+    }
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    .status{margin-top:10px; color:var(--muted); font-size:13px; line-height:1.7; text-align:center}
+
+    .preview{
+      margin-top:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      border-radius:16px;
+      padding:12px;
+    }
+    .preview h3{margin:0 0 10px; font-size:14px}
+    .preview-box{
+      width:100%;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+      overflow:hidden;
+    }
+    [data-theme="light"] .preview-box{ background: rgba(10,14,30,0.04); }
+    .preview-box img{width:100%; height:auto; display:block}
+
+    footer{
+      margin-top:26px;
+      border-top:1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      padding:18px 0;
+      text-align:center;
+    }
+    footer p{margin:0; color:var(--muted); font-size:13px}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-row">
+      <a class="brand" href="../index.html" aria-label="pdfsajao home">
+        <span class="logo-mark" aria-hidden="true"><i class="fa fa-file-pdf-o"></i></span>
+        <span>
+          <div class="logo-text">pdfsajao</div>
+          <div class="tag" id="t-tag">Fast • Private • Free</div>
+        </span>
+      </a>
+
+      <div class="header-actions">
+        <div class="pill" aria-label="Language switcher">
+          <button id="lang-en" class="active">EN</button>
+          <button id="lang-hi">हिंदी</button>
+          <button id="lang-bn">বাংলা</button>
+        </div>
+
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+          <i class="fa fa-moon-o" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1 id="t-title">Compress <span class="accent">PDF</span></h1>
+      <p id="t-sub">Preview quality, choose level, then compress. Best for scanned/image PDFs; quality may reduce.</p>
+    </section>
+
+    <section class="panel">
+      <div class="row">
+        <div class="file">
+          <label id="t-upload">Upload PDF</label>
+          <input id="pdfFile" type="file" accept="application/pdf" />
+          <div style="margin-top:8px;color:var(--muted);font-size:12px" id="t-note">
+            Note: This method re-renders pages as images, so quality may reduce.
+          </div>
+        </div>
+
+        <div class="controls">
+          <div style="font-weight:800" id="t-options">Settings</div>
+
+          <div class="field">
+            <label id="t-level">Compression level</label>
+            <select class="select" id="level">
+              <option value="low">High compression (low quality)</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">Low compression (high quality)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label id="t-limit">Max pages (mobile safe)</label>
+            <select class="select" id="maxPages">
+              <option value="0">All pages</option>
+              <option value="5">First 5 pages</option>
+              <option value="10" selected>First 10 pages</option>
+              <option value="20">First 20 pages</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label id="t-filename">Output filename</label>
+            <input class="input" id="outName" placeholder="compressed.pdf" value="compressed.pdf" />
+          </div>
+        </div>
+
+        <button class="btn" id="previewBtn"><i class="fa fa-eye"></i> <span id="t-preview">Preview page 1</span></button>
+        <button class="btn btn-primary" id="compressBtn"><i class="fa fa-compress"></i> <span id="t-compress">Compress</span></button>
+        <button class="btn btn-danger" id="cancelBtn" style="display:none"><i class="fa fa-ban"></i> <span id="t-cancel">Cancel</span></button>
+        <button class="btn" id="clearBtn"><i class="fa fa-trash"></i> <span id="t-clear">Clear</span></button>
+      </div>
+
+      <div class="status" id="status">Ready.</div>
+
+      <div class="preview" id="previewWrap" style="display:none">
+        <h3 id="t-previewTitle">Preview (page 1)</h3>
+        <div class="preview-box">
+          <img id="previewImg" alt="Preview" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+    <footer><div class="container"><p id="t-footer">© 2025 pdfsajao — Compress PDF</p></div></footer>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // pdf.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.js";
+
+      const { PDFDocument } = PDFLib;
+      const $ = (id) => document.getElementById(id);
+
+      let cancelFlag = false;
+
+      // Theme
+      const themeBtn = $("theme-toggle");
+      function setTheme(t){
+        document.documentElement.setAttribute("data-theme", t);
+        try{ localStorage.setItem("pdfsajao_theme", t); }catch(e){}
+        themeBtn.innerHTML = (t === "light")
+          ? '<i class="fa fa-moon-o" aria-hidden="true"></i>'
+          : '<i class="fa fa-sun-o" aria-hidden="true"></i>';
+      }
+      (function(){
+        let t = "dark";
+        try{ t = localStorage.getItem("pdfsajao_theme") || "dark"; }catch(e){}
+        setTheme(t);
+      })();
+      themeBtn.addEventListener("click", () => {
+        const cur = document.documentElement.getAttribute("data-theme") || "dark";
+        setTheme(cur === "dark" ? "light" : "dark");
+      });
+
+      // i18n
+      const langData = {
+        en:{
+          tag:"Fast • Private • Free",
+          title:'Compress <span class="accent">PDF</span>',
+          sub:"Preview quality, choose level, then compress. Best for scanned/image PDFs; quality may reduce.",
+          upload:"Upload PDF",
+          note:"Note: This method re-renders pages as images, so quality may reduce.",
+          options:"Settings",
+          level:"Compression level",
+          limit:"Max pages (mobile safe)",
+          filename:"Output filename",
+          preview:"Preview page 1",
+          previewTitle:"Preview (page 1)",
+          compress:"Compress",
+          cancel:"Cancel",
+          clear:"Clear",
+          ready:"Ready.",
+          pick:"Please select a PDF first.",
+          loading:"Loading PDF…",
+          previewing:"Rendering preview…",
+          working:(p,t)=>`Compressing page ${p}/${t}…`,
+          cancelled:"Cancelled.",
+          done:"Done. Download started."
+        },
+        hi:{
+          tag:"तेज़ • प्राइवेट • फ्री",
+          title:'PDF <span class="accent">Compress</span>',
+          sub:"पहले preview देखें, level चुनें, फिर compress करें। Scanned/image PDFs में बेहतर; quality कम हो सकती है।",
+          upload:"PDF अपलोड करें",
+          note:"Note: यह method pages को image बनाकर फिर PDF बनाता है, quality कम हो सकती है।",
+          options:"Settings",
+          level:"Compression level",
+          limit:"Max pages (mobile safe)",
+          filename:"Output filename",
+          preview:"Page 1 preview",
+          previewTitle:"Preview (page 1)",
+          compress:"Compress",
+          cancel:"Cancel",
+          clear:"Clear",
+          ready:"Ready.",
+          pick:"पहले PDF चुनें।",
+          loading:"PDF load हो रहा है…",
+          previewing:"Preview बन रहा है…",
+          working:(p,t)=>`Page ${p}/${t} compress हो रहा है…`,
+          cancelled:"Cancelled.",
+          done:"Done. Download started."
+        },
+        bn:{
+          tag:"দ্রুত • প্রাইভেট • ফ্রি",
+          title:'PDF <span class="accent">Compress</span>',
+          sub:"আগে preview দেখো, level বাছো, তারপর compress করো। স্ক্যান/ইমেজ PDF-এ ভালো; quality কমতে পারে।",
+          upload:"PDF আপলোড করুন",
+          note:"Note: এই method পেজগুলোকে ইমেজ বানিয়ে আবার PDF করে, তাই quality কমতে পারে।",
+          options:"Settings",
+          level:"Compression level",
+          limit:"Max pages (mobile safe)",
+          filename:"Output filename",
+          preview:"Page 1 preview",
+          previewTitle:"Preview (page 1)",
+          compress:"Compress",
+          cancel:"Cancel",
+          clear:"Clear",
+          ready:"Ready.",
+          pick:"আগে একটি PDF সিলেক্ট করুন।",
+          loading:"PDF লোড হচ্ছে…",
+          previewing:"Preview তৈরি হচ্ছে…",
+          working:(p,t)=>`পৃষ্ঠা compress হচ্ছে ${p}/${t}…`,
+          cancelled:"Cancelled.",
+          done:"Done. Download started."
+        }
+      };
+      let currentLang = "en";
+      const statusEl = $("status");
+      function setStatus(s){ statusEl.textContent = s; }
+
+      function setLanguage(lang){
+        currentLang = lang;
+        const t = langData[lang];
+        $("t-tag").innerText = t.tag;
+        $("t-title").innerHTML = t.title;
+        $("t-sub").innerText = t.sub;
+        $("t-upload").innerText = t.upload;
+        $("t-note").innerText = t.note;
+        $("t-options").innerText = t.options;
+        $("t-level").innerText = t.level;
+        $("t-limit").innerText = t.limit;
+        $("t-filename").innerText = t.filename;
+        $("t-preview").innerText = t.preview;
+        $("t-previewTitle").innerText = t.previewTitle;
+        $("t-compress").innerText = t.compress;
+        $("t-cancel").innerText = t.cancel;
+        $("t-clear").innerText = t.clear;
+        $("t-footer").innerText = "© 2025 pdfsajao — Compress PDF";
+
+        document.querySelectorAll(".pill button").forEach(b => b.classList.remove("active"));
+        $("lang-" + lang).classList.add("active");
+
+        setStatus(t.ready);
+        try { localStorage.setItem("pdfsajao_lang", lang); } catch(e) {}
+      }
+      $("lang-en").onclick = () => setLanguage("en");
+      $("lang-hi").onclick = () => setLanguage("hi");
+      $("lang-bn").onclick = () => setLanguage("bn");
+      (function initLang(){
+        let saved="en"; try{ saved = localStorage.getItem("pdfsajao_lang") || "en"; }catch(e){}
+        if(!langData[saved]) saved="en";
+        setLanguage(saved);
+      })();
+
+      function setBusy(b){
+        $("previewBtn").disabled = b;
+        $("compressBtn").disabled = b;
+        $("clearBtn").disabled = b;
+        $("pdfFile").disabled = b;
+        $("level").disabled = b;
+        $("maxPages").disabled = b;
+        $("outName").disabled = b;
+        $("cancelBtn").style.display = b ? "inline-flex" : "none";
+      }
+
+      function downloadBytes(bytes, filename){
+        const safe = (filename || "compressed.pdf").trim() || "compressed.pdf";
+        const name = safe.toLowerCase().endsWith(".pdf") ? safe : (safe + ".pdf");
+        const blob = new Blob([bytes], { type:"application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }
+
+      function levelParams(level){
+        // scale impacts resolution; jpeg impacts output size/quality
+        if(level === "low") return { scale: 1.0, jpeg: 0.55 };
+        if(level === "high") return { scale: 1.6, jpeg: 0.85 };
+        return { scale: 1.25, jpeg: 0.70 };
+      }
+
+      async function renderPageToJpeg(page, scale, jpegQuality){
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        const ctx = canvas.getContext("2d", { alpha: false });
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        // JPEG with quality parameter [web:379][web:381]
+        const dataUrl = canvas.toDataURL("image/jpeg", jpegQuality);
+        return { dataUrl, w: canvas.width, h: canvas.height };
+      }
+
+      $("cancelBtn").onclick = () => { cancelFlag = true; };
+
+      $("clearBtn").onclick = () => {
+        cancelFlag = false;
+        $("pdfFile").value = "";
+        $("previewWrap").style.display = "none";
+        setStatus(langData[currentLang].ready);
+      };
+
+      async function loadPdfFromInput(){
+        const f = $("pdfFile").files[0];
+        if(!f) throw new Error(langData[currentLang].pick);
+        const bytes = await f.arrayBuffer();
+        return await pdfjsLib.getDocument({ data: bytes }).promise;
+      }
+
+      $("previewBtn").onclick = async () => {
+        try{
+          const t = langData[currentLang];
+          setStatus(t.previewing);
+          const src = await loadPdfFromInput();
+          const { scale, jpeg } = levelParams($("level").value);
+
+          const page1 = await src.getPage(1);
+          const { dataUrl } = await renderPageToJpeg(page1, scale, jpeg);
+
+          $("previewImg").src = dataUrl;
+          $("previewWrap").style.display = "block";
+          setStatus(t.ready);
+        }catch(err){
+          alert(err && err.message ? err.message : String(err));
+          setStatus("Error: " + (err && err.message ? err.message : "Unknown error"));
+        }
+      };
+
+      $("compressBtn").onclick = async () => {
+        const t = langData[currentLang];
+        const f = $("pdfFile").files[0];
+        if(!f) return alert(t.pick);
+
+        cancelFlag = false;
+        setBusy(true);
+
+        try{
+          setStatus(t.loading);
+          const bytes = await f.arrayBuffer();
+          const src = await pdfjsLib.getDocument({ data: bytes }).promise;
+
+          const { scale, jpeg } = levelParams($("level").value);
+          const limit = parseInt($("maxPages").value, 10) || 0;
+          const total = limit > 0 ? Math.min(limit, src.numPages) : src.numPages;
+
+          const out = await PDFDocument.create();
+
+          for(let i=1; i<=total; i++){
+            if(cancelFlag){
+              setStatus(t.cancelled);
+              return;
+            }
+            setStatus(t.working(i, total));
+
+            const page = await src.getPage(i);
+            const { dataUrl, w, h } = await renderPageToJpeg(page, scale, jpeg);
+
+            const jpg = await out.embedJpg(dataUrl);
+            const p = out.addPage([w, h]);
+            p.drawImage(jpg, { x: 0, y: 0, width: w, height: h }); // [web:204]
+          }
+
+          const outBytes = await out.save();
+          downloadBytes(outBytes, $("outName").value);
+          setStatus(t.done);
+        }catch(err){
+          console.error(err);
+          setStatus("Error: " + (err && err.message ? err.message : "Unknown error"));
+        }finally{
+          setBusy(false);
+        }
+      };
+
+      setStatus(langData[currentLang].ready);
+    });
+  </script>
+</body>
+</html>
